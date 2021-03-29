@@ -2,12 +2,38 @@ var express = require('express');
 var router = express.Router();
 var M_Number=require('../models/number')
 
+var defnumber={
+  id:0,
+  number:0,
+  rating:0,
+  region:"0",
+  operator:"0",
+  reports:[],
+  isBan:0
+}
+
 /* GET home page. */
-router.get('/search', function(req, res) {
+router.get('/search', async function(req, res) {
   console.log(req.body);
   M_Number.findOne({number:req.query.number})
-  .then(doc=>{
-    ////place for calculate
+  .then(async doc=>{
+    ////place for test
+    //function for sleep
+    if(req.query.number==1){
+      console.log("timeToSleep 1sec");
+      
+      await new Promise(resolve => setTimeout(resolve, 2000));  
+      
+    }
+    if(req.query.number==5){
+      console.log("timeToSleep 5sec");
+      await new Promise(resolve => setTimeout(resolve, 7000));
+    }
+    ////////////////////////
+    if (doc==undefined) {
+      defnumber.number=req.query.number;
+      return res.send({success:true,errorCode:0,data:defnumber});
+    }
 
 
 

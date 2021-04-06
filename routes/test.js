@@ -1,8 +1,24 @@
 var express = require('express');
 var router = express.Router();
 var M_Number=require('../models/number')
+var passport = require('passort');
 
 /* GET users listing. */
+
+router.get('/test',function(req,res){
+  passport.authenticate('google', { scope: ['profile'] });
+  console.log("hello testtesttesttest");
+});
+app.get('/auth/google/callback', 
+  passport.authenticate('google', { failureRedirect: '/login' }),
+  function(req, res) {
+    // Successful authentication, redirect home.
+    res.redirect('/');
+  });
+
+
+
+
 router.get('/all', function(req, res) {
   console.log("idet idet idet");
   M_Number.find()

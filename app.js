@@ -4,8 +4,10 @@ var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 var mongoose = require('mongoose');
-var JwtHeaderParser=require('./middleware/jwtHeaderParser');
 const cors = require('cors');
+var passport = require('passport');
+var GoogleStrategy = require('passport-google-oauth20').Strategy;
+
 
 //routes
 var indexRouter = require('./routes/api');
@@ -14,7 +16,6 @@ var usersRouter = require('./routes/test');
 var dotenv=require('dotenv');
 
 dotenv.config();
-
 var app = express();
 
 
@@ -24,7 +25,22 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
+//passport strategies /////http://www.passportjs.org/packages/passport-google-oauth20/
+app.use(passport.initialize());
+app.use(passport.session());
+passport.use(new GoogleStrategy({
+  clientID: GOOGLE_CLIENT_ID,
+  clientSecret: GOOGLE_CLIENT_SECRET,
+  callbackURL: "http://www.example.com/auth/google/callback"
+},
+function(accessToken, refreshToken, profile, cb) {
+  User.findOrCreate({ googleId: profile.id }, function (err, user) {
+    return cb(err, user);
+  });
+}
+));
 
+//routes for API
 app.use('/api', indexRouter);
 app.use('/test', usersRouter);
 

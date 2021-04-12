@@ -4,18 +4,21 @@ var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 var mongoose = require('mongoose');
-const cors = require('cors');
+
+//setup passportjs
 var passport = require('passport');
 var GoogleStrategy = require('passport-google-oauth20').Strategy;
 
-
+//setup firebase
+var admin = require('firebase-admin');
+var serviceAccount = require('./configs/diplom-cf1d1-firebase-adminsdk-8512w-2a2ca11e7e.json');
 //routes
 var indexRouter = require('./routes/api');
 var usersRouter = require('./routes/test');
 
 var dotenv=require('dotenv');
-
 dotenv.config();
+
 var app = express();
 
 
@@ -28,17 +31,24 @@ app.use(express.static(path.join(__dirname, 'public')));
 //passport strategies /////http://www.passportjs.org/packages/passport-google-oauth20/
 app.use(passport.initialize());
 app.use(passport.session());
-passport.use(new GoogleStrategy({
-  clientID: GOOGLE_CLIENT_ID,
-  clientSecret: GOOGLE_CLIENT_SECRET,
-  callbackURL: "http://www.example.com/auth/google/callback"
-},
-function(accessToken, refreshToken, profile, cb) {
-  User.findOrCreate({ googleId: profile.id }, function (err, user) {
-    return cb(err, user);
-  });
-}
-));
+// passport.use(new GoogleStrategy({
+//   clientID: process.env.GOOGLE_CLIENT_ID,
+//   clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+//   callbackURL: "http://www.example.com/auth/google/callback"
+// },
+// function(accessToken, refreshToken, profile, cb) {
+//   User.findOrCreate({ googleId: profile.id }, function (err, user) {
+//     return cb(err, user);
+//   });
+// }
+// ));
+
+
+
+//firebase
+//admin.initializeApp({
+//  credential: admin.credential.cert(serviceAccount)
+//});
 
 //routes for API
 app.use('/api', indexRouter);
@@ -64,6 +74,9 @@ app.use(function(err, req, res, next) {
 mongoose.connect(process.env.MONGO_URL,{useNewUrlParser:true,useUnifiedTopology:true})
 .then(()=>{
   console.log("connected to MONGODB");
+})
+.catch(()=>{
+  console.log("errors in database /database settings");
 })
 
 module.exports = app;

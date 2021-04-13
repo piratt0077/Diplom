@@ -1,6 +1,8 @@
 var express = require('express');
 var router = express.Router();
-var M_Number=require('../models/number')
+var M_Number=require('../models/number');
+var M_User=require('../models/user');
+var M_UID=require('../models/testUser');
 
 var defnumber={
   id:0,
@@ -34,9 +36,6 @@ router.get('/search', async function(req, res) {
       defnumber.number=req.query.number;
       return res.send({success:true,errorCode:0,data:defnumber});
     }
-    
-
-
 
     outdoc=doc.toJSON();
     delete outdoc.firstReportDate;
@@ -57,6 +56,95 @@ router.get('/search', async function(req, res) {
     res.status(500).send({success:false,errorCode:1,data:err});
   })
   });
+
+  router.get('/updateToken',function (req, res){
+    var {registrationToken,macAddress} =req.query;
+    M_UID.findOne({registrationToken:registrationToken})
+    .then(doc=>{
+      if(doc==undefined){
+        var uid = new M_UID({
+          registrationToken: registrationToken,
+          macAddress:macAddress
+        })
+        uid.save()
+        .then(saved=>{
+          saved=saved.toJSON();
+          saved.uid=saved._id;
+          delete saved._id;
+          res.send({success:true,errorCode:0,data:saved})
+        })
+        .catch(err=>{
+          res.status(500).send({success:false,errorCode:1,data:err});
+        });
+      }
+      else{
+        doc.registrationToken=registrationToken;
+        doc.save();
+        doc=doc.toJSON();
+        doc.uid=doc._id;
+        delete doc._id;
+        res.send({success:true,errorCode:0,data:doc})
+      }
+    })
+    .catch(err=>{
+      res.status(500).send({success:false,errorCode:1,data:err});
+    })
+    
+  })
+  router.post('/setToBlackList',function (req, res){
+    phone=req.body.number;
+    M_User.findById(req.user._id)
+    .then(doc=>{
+      if(doc==undefined){
+        res.send({success:false,errorCode:1,data:err})
+      }
+      if(!doc.personalBlackList.includes(phone)){
+        doc.personalBlackList.push(phone);
+      }
+      else{
+        throw new Error('phone already in Black List')
+      }
+      doc.save();
+      res.send({success:true,errorCode:0,data:doc});
+    })
+    .catch(err=>{
+      console.log(err);
+      res.status(500).send({success:false,errorCode:1,data:err});
+    })
+  })
+  router.post('/setToWhiteList',function (req, res){
+    phone={number:req.body.number};
+    M_User.findById(req.user._id)
+    .then(doc=>{
+      if(doc==undefined){
+        res.send({success:false,errorCode:1,data:err})
+      }
+      if(!doc.personalWhiteList.includes(phone)){
+        doc.personalWhiteList.push(phone);
+      }
+      else{
+        throw new Error('phone already in White List')
+      }
+      doc.save();
+      res.send({success:true,errorCode:0,data:doc});
+    })
+    .catch(err=>{
+      console.log(err);
+      res.status(500).send({success:false,errorCode:1,data:err});
+    })
+  })
+
+
+
+
+
+
+
+
+
+
+
+
 
 ///////скучный говнокод
   function analog(reports){

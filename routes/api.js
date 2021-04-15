@@ -2,7 +2,6 @@ var express = require('express');
 var router = express.Router();
 var M_Number=require('../models/number');
 var M_User=require('../models/user');
-var M_UID=require('../models/testUser');
 
 var defnumber={
   id:0,
@@ -56,13 +55,13 @@ router.get('/search', async function(req, res) {
     res.status(500).send({success:false,errorCode:1,data:err});
   })
   });
-
+//rework method - split to two methods(signup and login)
   router.get('/updateToken',function (req, res){
     var {registrationToken,macAddress} =req.query;
-    M_UID.findOne({registrationToken:registrationToken})
+    M_User.findOne({registrationToken:registrationToken})
     .then(doc=>{
       if(doc==undefined){
-        var uid = new M_UID({
+        var uid = new M_User({
           registrationToken: registrationToken,
           macAddress:macAddress
         })
@@ -96,41 +95,45 @@ router.get('/search', async function(req, res) {
     M_User.findById(req.user._id)
     .then(doc=>{
       if(doc==undefined){
-        res.send({success:false,errorCode:1,data:err})
+        throw new Error('user not found')
       }
-      if(!doc.personalBlackList.includes(phone)){
-        doc.personalBlackList.push(phone);
-      }
-      else{
+      if(doc.personalBlackList.includes(phone)){
+        console.log("allo");
         throw new Error('phone already in Black List')
       }
-      doc.save();
+      else{
+        console.log("vkusno");
+        doc.personalBlackList.push(phone);
+        doc.save();
+      }
       res.send({success:true,errorCode:0,data:doc});
     })
     .catch(err=>{
       console.log(err);
-      res.status(500).send({success:false,errorCode:1,data:err});
+      res.status(500).send({success:false,errorCode:1,data:err.message});
     })
   })
   router.post('/setToWhiteList',function (req, res){
-    phone={number:req.body.number};
+    phone=req.body.number;
     M_User.findById(req.user._id)
     .then(doc=>{
       if(doc==undefined){
-        res.send({success:false,errorCode:1,data:err})
+        throw new Error('user not found')
       }
-      if(!doc.personalWhiteList.includes(phone)){
-        doc.personalWhiteList.push(phone);
-      }
-      else{
+      if(doc.personalWhiteList.includes(phone)){
+        console.log("allo");
         throw new Error('phone already in White List')
       }
-      doc.save();
+      else{
+        console.log("vkusno");
+        doc.personalWhiteList.push(phone);
+        doc.save();
+      }
       res.send({success:true,errorCode:0,data:doc});
     })
     .catch(err=>{
       console.log(err);
-      res.status(500).send({success:false,errorCode:1,data:err});
+      res.status(500).send({success:false,errorCode:1,data:err.message});
     })
   })
 

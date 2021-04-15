@@ -12,10 +12,10 @@ const user = new Schema({
         default:"123"
     },
     personalBlackList:[{
-        number:{type:String,default:"null"}
+        type:String
     }],
     personalWhiteList:[{
-        number:{type:String,default:"null"}
+        type:String
     }],
     children:[{
         id:{
@@ -32,7 +32,15 @@ const user = new Schema({
     registrationDate:{
         type:Date,
         default:Date.now()
-    }
+    },
+    macAddress:{
+        type: String,
+        default:''
+    },
+    registrationToken:{
+        type: String,
+        default:''
+    } 
 }, {versionKey:false});
 
 

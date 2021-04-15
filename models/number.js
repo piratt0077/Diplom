@@ -23,14 +23,7 @@ const number = new Schema({
         type:{type:String,default:"Другое"},
         date:{type:Date,default:Date.now()},
     }],
-    firstReportDate:{
-        type:Date,
-        default:Date.now()
-    },
-    lastReportDate:{
-        type:Date,
-        default:Date.now()
-    }
+    
 }, {versionKey:false});
 
 

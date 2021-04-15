@@ -107,7 +107,7 @@ router.get("/testpuk", function (req, res) {
 
 
 router.get('/setToBlackList',function (req, res){
-  phone={number:'123'};
+  phone='123';
   M_User.findOne({login:'321321321'})
   .then(doc=>{
     if(doc==undefined){

@@ -4,13 +4,7 @@ var bcrypt = require("bcrypt");
 var M_Number = require("../models/number");
 var M_User =require("../models/user");
 var passport = require("passport");
-
-var admin = require("firebase-admin");
-var serviceAccount = require("../configs/diplom-cf1d1-firebase-adminsdk-8512w-2a2ca11e7e.json");
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
-});
-
+var notificator = require("../notifications");
 /* GET users listing. */
 
 //TEST FOR PASSPORT
@@ -28,50 +22,25 @@ admin.initializeApp({
 //TEST FOR FIREBASE
 router.get("/firetest", function (req, res) {
   console.log("hello from firebase");
+  //var registrationToken = req.user.registrationToken;
   var registrationToken='ePti_yPKSw-H9Ui2hyGp_s:APA91bEw_Y_oSpA943GnTSczzojOLP0FI45di0nedwXF7f03yV__urLpZryVRsPImtdtMdLSItXfGpcFFbdcZKpAecTjfa7dR4YOHfEVacEHwqzoilV0gyGJ_tfJuquGBl3xFySd0vsy';
-
-  var message = {
-    notification: {
-      title: "Message from node",
-      body: "hey there",
-    },
-    token:registrationToken
-  };
-  // Send a message to devices subscribed to the provided topic.
-  admin.messaging().send(message)
-    .then((response) => {
-      // Response is a message ID string.
-      console.log("Successfully sent message:", response);
-      res.send('success');
-    })
-    .catch((error) => {
-      console.log("Error sending message:", error);
-      res.send('error');
-    });
+  notification.send(registrationToken,'u have parents');
+  res.send({success:true,errorCode:0,data:{}})
 
 });
 
 //work on login
 router.post("/login", function (req, res){
-  var {login,password,token} = req.body;
-  M_User.findOne({login:login})
-  .then(async doc=>{
-    bcrypt.compare(password,doc.password)
-    .then((result)=>{
-      if(result){
-        doc.token=token;
-
-        res.send({success:true,errorCode:0,data:{}});
-      }
-      else{
-        throw new Error('wrong password')
-      }
-    })
-
-    
+  var {uid,token} = req.body;
+  M_User.findOne({uid:uid,registrationToken:token})
+  .then(doc=>{
+    if(doc==undefined){
+      throw new Error('wrong door');
+    }
+    res.send(doc);
   })
   .catch(err=>{
-    res.status(500).send({success:false,errorCode:1,data:err.message});
+    res.send({success:false,errorCode:0,data:{coc:'suck'}});
   })
 })
 

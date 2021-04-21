@@ -61,11 +61,11 @@ router.get('/search', async function(req, res) {
     M_User.findOne({registrationToken:registrationToken})
     .then(doc=>{
       if(doc==undefined){
-        var uid = new M_User({
+        var user = new M_User({
           registrationToken: registrationToken,
           macAddress:macAddress
         })
-        uid.save()
+        user.save()
         .then(saved=>{
           saved=saved.toJSON();
           saved.uid=saved._id;

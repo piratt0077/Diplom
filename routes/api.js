@@ -55,6 +55,8 @@ router.get('/search', async function(req, res) {
     res.status(500).send({success:false,errorCode:1,data:err});
   })
   });
+
+
 //rework method - split to two methods(signup and login)
   router.get('/updateToken',function (req, res){
     var {registrationToken,macAddress} =req.query;
@@ -90,6 +92,13 @@ router.get('/search', async function(req, res) {
     })
     
   })
+
+
+
+
+
+
+  
   router.post('/setToBlackList',function (req, res){
     phone=req.body.number;
     M_User.findById(req.user._id)

@@ -8,7 +8,7 @@ function send(token,text){
     var message = {
         notification: {
           title: "Notification♥",
-          body: "text",
+          body: text,
         },
         token:token
       };

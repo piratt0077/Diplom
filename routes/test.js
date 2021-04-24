@@ -5,6 +5,7 @@ var M_Number = require("../models/number");
 var M_User =require("../models/user");
 var passport = require("passport");
 var notificator = require("../notifications");
+var jwt = require("jsonwebtoken");
 /* GET users listing. */
 
 //TEST FOR PASSPORT
@@ -26,30 +27,72 @@ router.get("/firetest", function (req, res) {
   var registrationToken='ePti_yPKSw-H9Ui2hyGp_s:APA91bEw_Y_oSpA943GnTSczzojOLP0FI45di0nedwXF7f03yV__urLpZryVRsPImtdtMdLSItXfGpcFFbdcZKpAecTjfa7dR4YOHfEVacEHwqzoilV0gyGJ_tfJuquGBl3xFySd0vsy';
   notification.send(registrationToken,'u have parents');
   res.send({success:true,errorCode:0,data:{}})
-
 });
 
 //work on login
-router.post("/login", function (req, res){
+router.post("/login", async function (req, res){
   var {uid,token} = req.body;
   M_User.findOne({uid:uid,registrationToken:token})
-  .then(doc=>{
+  .then(async doc=>{
     if(doc==undefined){
       throw new Error('wrong door');
     }
-    res.send(doc);
+    var token=await jwt.sign({
+      uid:doc._id,
+      registrationToken:doc.registrationToken
+    },process.env.SECRET)
+    res.send({success:true,errorCode:0,data:{token:token}});
   })
   .catch(err=>{
     res.send({success:false,errorCode:0,data:{coc:'suck'}});
   })
-})
+});
 
-router.get("/all", function (req, res) {
+//////test for parent/child relationship
+router.get("/addChild", function (req, res) {
+  var childUID=req.query.uid;
+  M_User.findOne({uid:childUID})
+  .then(doc=>{
+    if(doc==undefined){
+      throw new Error('not Found')
+    }
+    doc=doc.toJSON();
+    notification.send(doc.registrationToken,'ur Dada found u'+req.user.uid);
+    res.send()
+  })
+  .catch(err=>{
+    res.send({success:false,errorCode:0,data:err.message});
+  })
+});
+
+router.get("/addParent", function (req, res) {
+  var parentUID=req.query.uid;
+  M_User.findOne({_id:parentUID})
+  .then(doc=>{
+    doc.children.push(req.body.uid)
+  })
+  .catch(err=>{
+    res.send({success:false,errorCode:0,data:err.message});
+  })
+});
+
+
+
+
+//get all for test
+router.get("/allNumber", function (req, res) {
   console.log("idet idet idet");
   M_Number.find().then((doc) => {
     res.send(doc);
   });
 });
+router.get("/allUser", function (req, res) {
+  console.log("idet idet idet");
+  M_User.find().then((doc) => {
+    res.send(doc);
+  });
+});
+
 
 router.get("/testpuk", function (req, res) {
   //number,rating,operator,type,signupDate,lastreportDate
@@ -63,7 +106,6 @@ router.get("/testpuk", function (req, res) {
   });
   numberdoc.save();
   console.log(numberdoc);
-  
   let userdoc = new M_User({
     login: "123123123",
     password:"123123"
@@ -72,32 +114,6 @@ router.get("/testpuk", function (req, res) {
   console.log(userdoc);
   res.send({success:true,errorCode:0,data:userdoc});
 });
-
-
-
-router.get('/setToBlackList',function (req, res){
-  phone='123';
-  M_User.findOne({login:'321321321'})
-  .then(doc=>{
-    if(doc==undefined){
-      res.send({success:false,errorCode:1,data:err})
-    }
-    if(doc.personalBlackList.includes(phone)){
-      console.log("allo");
-      throw new Error('phone already in Black List')
-    }
-    else{
-      console.log("vkusno");
-      doc.personalBlackList.push(phone);
-      doc.save();
-    }
-    res.send({success:true,errorCode:0,data:doc});
-  })
-  .catch(err=>{
-    console.log(err);
-    res.status(500).send({success:false,errorCode:1,data:err.message});
-  })
-})
 
 
 

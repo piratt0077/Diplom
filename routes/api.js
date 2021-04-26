@@ -2,6 +2,7 @@ var express = require('express');
 var router = express.Router();
 var M_Number=require('../models/number');
 var M_User=require('../models/user');
+var notificator = require('../notifications');
 
 var defnumber={
   id:0,
@@ -13,7 +14,26 @@ var defnumber={
   isBan:0
 }
 
-/* GET home page. */
+
+router.post("/login", async function (req, res){
+  var {uid,token} = req.body;
+  M_User.findOne({_id:uid,registrationToken:token})
+  .then(async doc=>{
+    if(doc==undefined){
+      throw new Error('wrong door');
+    }
+    var token = jwt.sign({
+      user:doc.toJSON()
+    },process.env.SECRET);
+
+    res.send({success:true,errorCode:0,data:{token:token}});
+  })
+  .catch(err=>{
+    console.log(err);
+    res.send({success:false,errorCode:0,data:{coc:err.message}});
+  })
+});
+
 router.get('/search', async function(req, res) {
   console.log(req.body);
   M_Number.findOne({number:req.query.number})

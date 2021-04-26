@@ -30,35 +30,22 @@ router.get("/firetest", function (req, res) {
 });
 
 //work on login
-router.post("/login", async function (req, res){
-  var {uid,token} = req.body;
-  M_User.findOne({uid:uid,registrationToken:token})
-  .then(async doc=>{
-    if(doc==undefined){
-      throw new Error('wrong door');
-    }
-    var token=await jwt.sign({
-      uid:doc._id,
-      registrationToken:doc.registrationToken
-    },process.env.SECRET)
-    res.send({success:true,errorCode:0,data:{token:token}});
-  })
-  .catch(err=>{
-    res.send({success:false,errorCode:0,data:{coc:'suck'}});
-  })
-});
+
 
 //////test for parent/child relationship
 router.get("/addChild", function (req, res) {
+  if(req.header('Authorization')==null){
+    return res.send('not authorized');
+  }
   var childUID=req.query.uid;
-  M_User.findOne({uid:childUID})
+  M_User.findOne({_id:childUID})
   .then(doc=>{
     if(doc==undefined){
-      throw new Error('not Found')
+      throw new Error('user not Found');
     }
     doc=doc.toJSON();
-    notification.send(doc.registrationToken,'ur Dada found u'+req.user.uid);
-    res.send()
+    notification.send(doc.registrationToken,'ur Dada found u'+req.user._id);
+    res.send({success:true,errorCode:0,data:doc})
   })
   .catch(err=>{
     res.send({success:false,errorCode:0,data:err.message});
@@ -66,15 +53,21 @@ router.get("/addChild", function (req, res) {
 });
 
 router.get("/addParent", function (req, res) {
+  if(req.header('Authorization')==null){
+    return res.send('not authorized');
+  }
   var parentUID=req.query.uid;
   M_User.findOne({_id:parentUID})
   .then(doc=>{
     doc.children.push(req.body.uid)
+    doc.save();
+    res.send({success:true,errorCode:0,data:doc})
   })
   .catch(err=>{
     res.send({success:false,errorCode:0,data:err.message});
   })
 });
+
 
 
 

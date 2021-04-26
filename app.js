@@ -68,7 +68,13 @@ app.use(function(err, req, res, next) {
   // render the error page
   res.status(err.status || 500);
   console.log(err);
-  res.render('error');
+  if(err.status==404){
+    res.send({success:false,errorCode:0,data:'page not found'});
+  }
+  else{
+    res.send({success:false,errorCode:0,data:'serverside error'});
+  }
+  
 });
 
 mongoose.connect(process.env.MONGO_URL,{useNewUrlParser:true,useUnifiedTopology:true})

@@ -3,6 +3,8 @@ var router = express.Router();
 var M_Number=require('../models/number');
 var M_User=require('../models/user');
 var notificator = require('../notifications');
+var jwt = require("jsonwebtoken");
+
 
 var defnumber={
   id:0,
@@ -16,8 +18,8 @@ var defnumber={
 
 
 router.post("/login", async function (req, res){
-  var {uid,token} = req.body;
-  M_User.findOne({_id:uid,registrationToken:token})
+  var {uid,registrationToken} = req.body;
+  M_User.findOne({_id:uid,registrationToken:registrationToken})
   .then(async doc=>{
     if(doc==undefined){
       throw new Error('wrong door');
@@ -25,12 +27,12 @@ router.post("/login", async function (req, res){
     var token = jwt.sign({
       user:doc.toJSON()
     },process.env.SECRET);
-
-    res.send({success:true,errorCode:0,data:{token:token}});
+    
+    res.send({success:true,errorCode:0,data:{token:token,uid:uid,registrationToken:registrationToken}});
   })
   .catch(err=>{
     console.log(err);
-    res.send({success:false,errorCode:0,data:{coc:err.message}});
+    res.status(500).send({success:false,errorCode:0,data:{coc:err.message}});
   })
 });
 
@@ -53,7 +55,7 @@ router.get('/search', async function(req, res) {
 
     if (doc==undefined) {
       defnumber.number=req.query.number;
-      return res.send({success:true,errorCode:0,data:defnumber});
+      return res.status(500).send({success:true,errorCode:0,data:defnumber});
     }
 
     outdoc=doc.toJSON();
@@ -80,7 +82,7 @@ router.get('/search', async function(req, res) {
 //rework method - split to two methods(signup and login)
   router.get('/updateToken',function (req, res){
     var {registrationToken,macAddress} =req.query;
-    M_User.findOne({registrationToken:registrationToken})
+    M_User.findOne({macAddress:macAddress})
     .then(doc=>{
       if(doc==undefined){
         var user = new M_User({
@@ -110,10 +112,37 @@ router.get('/search', async function(req, res) {
     .catch(err=>{
       res.status(500).send({success:false,errorCode:1,data:err});
     })
-    
   })
 
-
+  router.get('/signUp',function (req, res){
+    var {registrationToken,macAddress} =req.query;
+    M_User.findOne({macAddress:macAddress})
+    .then(doc=>{
+      if(doc==undefined){
+        var user = new M_User({
+          registrationToken: registrationToken,
+          macAddress:macAddress
+        })
+        user.save()
+        .then(saved=>{
+          saved=saved.toJSON();
+          saved.uid=saved._id;
+          delete saved._id;
+          res.send({success:true,errorCode:0,data:saved})
+        })
+        .catch(err=>{
+          console.log("error on save new user"+err);
+          res.status(500).send({success:false,errorCode:1,data:err});
+        });
+      }
+      else{
+        throw new Error('user already registered')
+      }
+    })
+    .catch(err=>{
+      res.status(500).send({success:false,errorCode:1,data:err.message});
+    })
+  })
 
 
 

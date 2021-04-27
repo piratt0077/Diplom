@@ -6,6 +6,7 @@ const jwt = require('jsonwebtoken');
  */
 const JwtHeaderParser = (req, res, next) => {
     const accessToken = req.header('Authorization');
+    console.log('hi aUTH')
     if (accessToken != null) {
         try {
             const decode = jwt.verify(accessToken, process.env.SECRET);

@@ -17,6 +17,7 @@ var indexRouter = require('./routes/api');
 var usersRouter = require('./routes/test');
 
 var dotenv=require('dotenv');
+const jwtHeaderParser = require('./middleware/jwtHeaderParser');
 dotenv.config();
 
 var app = express();
@@ -27,6 +28,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(jwtHeaderParser());
 
 //passport strategies /////http://www.passportjs.org/packages/passport-google-oauth20/
 app.use(passport.initialize());

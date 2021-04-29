@@ -4,12 +4,16 @@ admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
 });
 
-function send(token,text){
+function send(token,text,data){
+  if(data==undefined){
+    data={};
+  }
     var message = {
         notification: {
           title: "Notification♥",
           body: text,
         },
+        data:data,
         token:token
       };
     admin.messaging().send(message)

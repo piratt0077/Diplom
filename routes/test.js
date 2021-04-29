@@ -20,16 +20,95 @@ var jwt = require("jsonwebtoken");
 //     res.redirect('/');
 //   });
 
+
+
+
+
+
 //TEST FOR FIREBASE
 router.get("/firetest", function (req, res) {
   console.log("hello from firebase");
   //var registrationToken = req.user.registrationToken;
-  var registrationToken='ePti_yPKSw-H9Ui2hyGp_s:APA91bEw_Y_oSpA943GnTSczzojOLP0FI45di0nedwXF7f03yV__urLpZryVRsPImtdtMdLSItXfGpcFFbdcZKpAecTjfa7dR4YOHfEVacEHwqzoilV0gyGJ_tfJuquGBl3xFySd0vsy';
-  notification.send(registrationToken,'u have parents');
+  var registrationToken='fOZnSMFYSqu3ndqhR6sOw1:APA91bFwE83mccFi0ZH3d6c-uZ_cybMS2XmGWUta0NcaMh0uFx3YD1uEf3o3pRN7OWGM1jPwmCBTeq1cSOiUGC57UAviulFhDTgCFozHpif0AIoqea-IzQgIoqQ_lbJJ9zW7KHNOinAP';
+  notificator.send(registrationToken,'u have parents',{uid:'1123123123'});
   res.send({success:true,errorCode:0,data:{}})
 });
 
-//work on login
+//work on lists
+router.post('/setToBlackList',function (req, res){
+  phone=req.body.number;
+  console.log(req.user);
+  M_User.findById({_id:req.user.user._id})
+  .then(doc=>{
+    if(doc==undefined){
+      throw new Error('user not found')
+    }
+    if(doc.personalBlackList.includes(phone)){
+      console.log("allo");
+      throw new Error('phone already in Black List')
+    }
+    else{
+      console.log("vkusno");
+      doc.personalBlackList.push(phone);
+      doc.save();
+    }
+    res.send({success:true,errorCode:0,data:doc});
+  })
+  .catch(err=>{
+    console.log(err);
+    res.status(500).send({success:false,errorCode:1,data:err.message});
+  })
+})
+
+router.post('/unsetToBlackList',function (req, res){
+  phone=req.body.number;
+  M_User.findById(req.user.user._id)
+  .then(doc=>{
+    if(doc==undefined){
+      console.log("user not found");
+      throw new Error('user not found')
+    }
+    if(doc.personalBlackList.includes(phone)){
+      doc.personalBlackList.pull(phone);
+      console.log("phone removd");
+      doc.save();
+    }
+    else{
+      console.log("phone not found in blacklist");
+      throw new Error('phone not found in blacklist')
+    }
+    res.send({success:true,errorCode:0,data:doc});
+  })
+  .catch(err=>{
+    console.log(err);
+    res.status(500).send({success:false,errorCode:1,data:err.message});
+  })
+})
+
+router.post('/unsetToWhiteList',function (req, res){
+  phone=req.body.number;
+  M_User.findById(req.user.user._id)
+  .then(doc=>{
+    if(doc==undefined){
+      console.log("user not found");
+      throw new Error('user not found')
+    }
+    if(doc.personalWhiteList.includes(phone)){
+      doc.personalWhiteList.pull(phone);
+      console.log("phone removd");
+      doc.save();
+    }
+    else{
+      console.log("phone not found in Whitelist");
+      throw new Error('phone not found in Whitelist')
+    }
+    res.send({success:true,errorCode:0,data:doc});
+  })
+  .catch(err=>{
+    console.log(err);
+    res.status(500).send({success:false,errorCode:1,data:err.message});
+  })
+})
 
 
 //////test for parent/child relationship
@@ -44,7 +123,7 @@ router.get("/addChild", function (req, res) {
       throw new Error('user not Found');
     }
     doc=doc.toJSON();
-    notification.send(doc.registrationToken,'ur Dada found u'+req.user._id);
+    notificator.send(doc.registrationToken,'ur Dada found u'+req.user._id);
     res.send({success:true,errorCode:0,data:doc})
   })
   .catch(err=>{
@@ -106,6 +185,28 @@ router.get("/testpuk", function (req, res) {
   userdoc.save();
   console.log(userdoc);
   res.send({success:true,errorCode:0,data:userdoc});
+});
+
+
+//test token
+router.get("/testtoken", function (req, res) {
+  console.log("test test test");
+  //var registrationToken = req.user.registrationToken;
+  var data ={
+    data:'data',
+    dada:'netnet',
+    netnet:'dada'
+  }
+  console.log("data BEFORE sign");
+  console.log(data);
+  var key=jwt.sign(data,process.env.SECRET);
+  console.log("data AFTER sign");
+  console.log(key);
+  var open=jwt.verify(key,process.env.SECRET);
+  console.log("data AFTER AFTER");
+  console.log(open);
+  
+  res.send({success:true,errorCode:0,data:{open}})
 });
 
 

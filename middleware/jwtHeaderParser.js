@@ -10,7 +10,8 @@ const JwtHeaderParser = async (req, res, next) => {
     if (accessToken != null) {
         try {
             var decode = jwt.verify(accessToken, process.env.SECRET);
-            req.user = decode;
+            req.user = decode.user;
+            req.tokenDate = decode.iat;// token lifetime
             console.log("AUTHORIZED");
         } catch (e) {
             res.set('Authorization', null);

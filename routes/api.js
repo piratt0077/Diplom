@@ -20,7 +20,7 @@ var defnumber={
 //parentship section
 router.get("/addChild", function (req, res) {
   // if(req.user==undefined)){
-  //   return res.send({success:false,errorCode:0,data:err.message});
+  //   return res.send({success:false,errorCode:0,data:'404 not found'});
   // }
   var childUID=req.query.uid;
   M_User.findOne({_id:childUID})
@@ -32,7 +32,7 @@ router.get("/addChild", function (req, res) {
       throw new Error('user not Found');
     }
     doc=doc.toJSON();
-    notificator.send(doc.registrationToken,'ur Dada found u',{uid:childUID}/*,{uid:req.user._id}*/);
+    notificator.send(doc.registrationToken,'ur Dada found u',{uid:req.user._id});
     res.send({success:true,errorCode:0,data:'puk'})
   })
   .catch(err=>{
@@ -43,7 +43,7 @@ router.get("/addChild", function (req, res) {
 
 router.get("/addParent", function (req, res) {
   // if(req.user==undefined){
-  //   return res.send({success:false,errorCode:0,data:err.message});
+  //   return res.send({success:false,errorCode:0,data:'404 undefined'});
   // }
   var parentUID=req.query.uid;
   M_User.findOne({_id:parentUID})//parent finding to add child data
@@ -55,8 +55,7 @@ router.get("/addParent", function (req, res) {
     .then(childDoc=>{
       childDoc.parents.push(parentUID);
       childDoc.save();
-      notificator.send(parentDoc.registrationToken,'ur Son found u'/*,{uid:req.user._id}*/);
-
+      notificator.send(parentDoc.registrationToken,'ur Son found u',{uid:req.user._id});
       res.send({success:true,errorCode:0,data:parentDoc})
     })    
   })
@@ -259,7 +258,7 @@ router.post("/login", async function (req, res){
 
   router.post('/unsetToBlackList',function (req, res){
     phone=req.body.number;
-    M_User.findById(req.user.user._id)
+    M_User.findById(req.user._id)
     .then(doc=>{
       if(doc==undefined){
         console.log("user not found");
@@ -284,7 +283,7 @@ router.post("/login", async function (req, res){
   
   router.post('/unsetToWhiteList',function (req, res){
     phone=req.body.number;
-    M_User.findById(req.user.user._id)
+    M_User.findById(req.user._id)
     .then(doc=>{
       if(doc==undefined){
         console.log("user not found");

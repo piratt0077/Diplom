@@ -25,6 +25,21 @@ var jwt = require("jsonwebtoken");
 
 
 
+//main method
+router.get("/report",function(req, res){
+  res.send()
+})
+
+
+
+
+
+
+
+
+
+
+
 //TEST FOR FIREBASE
 router.get("/firetest", function (req, res) {
   console.log("hello from firebase");
@@ -38,7 +53,7 @@ router.get("/firetest", function (req, res) {
 router.post('/setToBlackList',function (req, res){
   phone=req.body.number;
   console.log(req.user);
-  M_User.findById({_id:req.user.user._id})
+  M_User.findById({_id:req.user._id})
   .then(doc=>{
     if(doc==undefined){
       throw new Error('user not found')
@@ -62,7 +77,7 @@ router.post('/setToBlackList',function (req, res){
 
 router.post('/unsetToBlackList',function (req, res){
   phone=req.body.number;
-  M_User.findById(req.user.user._id)
+  M_User.findById(req.user._id)
   .then(doc=>{
     if(doc==undefined){
       console.log("user not found");
@@ -87,7 +102,7 @@ router.post('/unsetToBlackList',function (req, res){
 
 router.post('/unsetToWhiteList',function (req, res){
   phone=req.body.number;
-  M_User.findById(req.user.user._id)
+  M_User.findById(req.user._id)
   .then(doc=>{
     if(doc==undefined){
       console.log("user not found");
@@ -109,6 +124,83 @@ router.post('/unsetToWhiteList',function (req, res){
     res.status(500).send({success:false,errorCode:1,data:err.message});
   })
 })
+
+//synchronize settings from owner to target
+router.get('/synchronize',function (req, res){
+  var settings =req.body.settings;
+  var target =req.query.uid;//id пользователя для синхронизации
+  M_User.findOne({_id:target})
+  .then(targetdoc=>{
+      M_User.findOne({_id:req.user._id})
+    .then(doc=>{
+      doc=doc.toJSON();
+      var settings={
+        personalWhiteList:doc.personalWhiteList,
+        personalBlackList:doc.personalBlackList,
+      }
+      notificator.send(targetdoc.registrationToken,'sync request',settings);
+      res.send({success:true,errorCode:0,data:'success'});
+    })
+    .catch(err=>{
+      console.log(res);
+      res.status(500).send({success:false,errorCode:1,data:err.message});
+    })
+  })
+  .catch(err=>{
+    console.log(res);
+    res.status(500).send({success:false,errorCode:1,data:err.message});
+  })
+})
+
+////////////check child phone history
+router.get('/checkHistory',function (req, res){
+  var childUID =req.query.uid;
+  M_User.findOne({_id:req.user._id})
+  .then(doc=>{
+    if (!doc.children.includes(childUID)) {
+      throw new Error('user dont have that child')
+    }
+    M_User.findOne({_id:childUID})
+    .then(docc=>{
+      if (!docc.parents.includes(req.user._id)) {
+        throw new Error('user dont have that parent')
+      }
+      notificator.send(docc.registrationToken,'history checking',{parent:req.user._id})
+      res.send({success:true,errorCode:0,data:'success'});
+    })
+    .catch(err=>{
+      console.log(res);
+      res.status(500).send({success:false,errorCode:1,data:err.message});
+    })
+  })
+  .catch(err=>{
+    console.log(res);
+    res.status(500).send({success:false,errorCode:1,data:err.message});
+  })
+})
+
+router.get('/history',function (req, res){
+  var parentUID =req.query.uid;
+  M_User.findOne({_id:parentUID})
+  .then(doc=>{
+    if (!doc.children.includes(req.user._id)) {
+      throw new Error('user dont have that child')
+    }
+    notificator.send(doc.registrationToken,'history list',req.body.history);
+    res.send({success:true,errorCode:0,data:'success'});
+
+  })
+  .catch(err=>{
+    console.log(res);
+    res.status(500).send({success:false,errorCode:1,data:err.message});
+  })
+})
+
+
+
+
+
+
 
 
 //////test for parent/child relationship
